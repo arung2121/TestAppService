@@ -16,37 +16,59 @@
 
       <p v-if="error" class="error">{{ error }}</p>
     </form>
-    
-     <button type="button" @click="goToRegister">Register</button>
+
+    <button type="button" @click="goToRegister">Register</button>
   </div>
 </template>
 
-
-
 <script setup>
-import { defineAsyncComponent, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import axios from "axios";
 
-const email = ref('')
-const password = ref('')
-const error = ref('')
-const router = useRouter()
+// Reactive variables
+const email = ref("");
+const password = ref("");
+const error = ref("");
 
+// Router instance
+const router = useRouter();
+
+// Handle login
 const handleLogin = async () => {
-  error.value = ''
+  error.value = "";
 
-  // Simulate API call (replace with real API)
-  if (email.value === 'user@example.com' && password.value === 'password123') {
-    alert('Login successful!')
-    // Redirect or store token
-  } else {
-    error.value = 'Invalid email or password'
+  try {
+    const response = await axios.post(
+      "https://localhost:7055/api/users/login",
+      {
+        username: email.value,
+        password: password.value,
+      }
+    );
+
+    if (response.status === 200) {
+      const { token } = response.data;
+
+      // Save JWT token to localStorage
+      localStorage.setItem("jwtToken", token);
+
+      // Navigate to products page (SPA navigation)
+      router.push("/products");
+    } else {
+      error.value = "Invalid email or password";
+    }
+  } catch (err) {
+    error.value =
+      err.response?.data?.message || "Login failed. Please try again.";
+    console.error("Login error:", err);
   }
-}
+};
 
-const goToRegister = async () =>{
+// Navigate to register page
+const goToRegister = () => {
   router.push("/register");
-}
+};
 </script>
 
 <style scoped>
@@ -71,6 +93,7 @@ input {
 }
 button {
   padding: 10px 20px;
+  margin-top: 10px;
 }
 .error {
   color: red;

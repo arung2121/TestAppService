@@ -60,7 +60,8 @@ const handleRegister = async () => {
     }
 
     const response = await axios.post('https://localhost:7055/api/users/register', userData)
-    alert(response.data.message)
+    alert(response.data.message);
+    window.location.href = '/login'
   } catch (err) {
     console.error(err)
     alert('Registration failed')
