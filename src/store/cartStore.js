@@ -1,4 +1,4 @@
-import { reactive } from "vue";
+import { reactive, computed } from "vue";
 
 export const cart = reactive({
   items: [],
@@ -16,7 +16,11 @@ export const cart = reactive({
   clear() {
     this.items = [];
   },
-  get total() {
-    return this.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  getTotal() {
+    return this.items.reduce((total, item) => total + item.price * item.quantity, 0);
   }
 });
+
+export const cartTotal = computed(() =>
+  cart.items.reduce((total, item) => total + item.price * item.quantity, 0)
+);

@@ -59,7 +59,7 @@ const handleRegister = async () => {
       secretAnswer: secretAnswer.value
     }
 
-    const response = await axios.post('https://localhost:7055/api/users/register', userData)
+    const response = await axios.post('http://localhost:7055/api/users/register', userData)
     alert(response.data.message);
     window.location.href = '/login'
   } catch (err) {
