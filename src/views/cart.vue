@@ -21,10 +21,10 @@
   
 </template>
 
-<script setup>
+<script  lang="ts" setup>
 import { cart } from "../store/cartStore.js";
 
-const removeFromCart = (id) => {
+const removeFromCart = (id : number) => {
   cart.remove(id);
 };
 

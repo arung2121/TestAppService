@@ -14,37 +14,94 @@
         <h3 class="product-name">{{ product.name }}</h3>
         <p class="product-desc">{{ product.description }}</p>
         <p class="product-price">💲{{ product.price }}</p>
-        <button class="add-cart-btn" @click="addToCart(product)">
+
+          <div>
+
+          <div v-if="(productQuantities[product.id] || 0) > 0" class="quantity-control">
+          <button @click="decreaseQuantity(product)">-</button>
+          <span>{{ productQuantities[product.id] }}</span>
+          <button @click="increaseQuantity(product)">+</button>
+          </div>
+        <div v-else>
+          <button class="add-cart-btn" @click="addItemToCart(product)">
           Add to Cart
         </button>
+        </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted } from "vue";
+<script lang="ts" setup>
+import { ref, onMounted, reactive } from "vue";
 import { productService } from "../service/productService.js";
 import { cart } from "../store/cartStore.js";
 
-const products = ref([]);
-const loading = ref(true);
+import { CartItem, Product } from "../models/types.js";
+import {cartMixin} from "../mixins/cartMixin.js";
 
-const addToCart = (product) => {
-  cart.add(product);
-  alert(`${product.name} added to cart!`);
+const products = ref<Product[]>();
+const loading = ref(true);
+const userId = localStorage.getItem('userId');
+const productQuantities = reactive<{ [id : string] : number}>({});
+
+
+const increaseQuantity = (product: Product) => {
+    productQuantities[product.id]++;
+    addItemToCart(product);
 };
+
+
+const decreaseQuantity = (product: Product) => {
+  if (productQuantities[product.id] > 0)
+  {
+     productQuantities[product.id]--;
+     removeItemFromCart(product);
+  } 
+};
+const addItemToCart = async (product: Product) => {
+  if(userId != null)
+  {
+    productQuantities[product.id]++;
+    await cartMixin.addToCart(userId, product);
+  }  
+};
+
+const removeItemFromCart = async (product: Product) => {
+  if(userId != null)
+  {
+    await cartMixin.removeFromCart(userId, product.id);
+  }  
+};
+
 
 onMounted(async () => {
   try {
     const response = await productService.getProducts();
     products.value = response.data;
+    products.value?.forEach(p => {
+    productQuantities[p.id] = 0;
+    });
+
+    
+    if (userId) {
+      const cartResponse = await cartMixin.getCartItem(userId); // fetch cart from backend
+      cart.items = cartResponse.items ;
+      (cartResponse.items as CartItem[]).forEach((item: CartItem) => {
+        console.log(item.productId);
+        productQuantities[item.productId!] = item.quantity;
+      });
+    }
+
   } catch (error) {
     console.log("Failed to load products", error);
   } finally {
     loading.value = false;
   }
 });
+
+
 </script>
 
 <style scoped>

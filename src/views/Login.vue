@@ -48,10 +48,13 @@ const handleLogin = async () => {
     );
 
     if (response.status === 200) {
-      const { token } = response.data;
+      const token = response.data.token;
+      const userId = response.data.userId; 
 
       // Save JWT token to localStorage
       localStorage.setItem("jwtToken", token);
+      localStorage.setItem('userId', userId);
+      console.log(userId);
 
       // Navigate to products page (SPA navigation)
       router.push("/products");
