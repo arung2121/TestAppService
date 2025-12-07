@@ -1,6 +1,25 @@
 <template>
   <div class="products">
     <h1>Products</h1>
+
+    <input type="date" v-model="fromDate" />
+    <input type="date" v-model="toDate" />
+    <el-select
+      v-model="selectedProducts"
+      multiple 
+      aria-placeholder="Select Products">
+      <el-option
+       v-for="product in products"
+       :key="product.id"
+       :label="product.name"
+       :value="product.name">
+      </el-option>
+    </el-select>
+        
+   
+
+    <button @click="searchProducts">Search</button>
+
     <router-link to="/cart">🛒 View Cart ({{ cart.items.length }})</router-link>
     <div v-if="loading" class="loading">Loading...</div>
 
@@ -42,6 +61,9 @@ import { CartItem, Product } from "../models/types.js";
 import {cartMixin} from "../mixins/cartMixin.js";
 
 const products = ref<Product[]>();
+const selectedProducts = ref<string[]>();
+const fromDate = ref<string>("");
+const toDate = ref<string>("");
 const loading = ref(true);
 const userId = localStorage.getItem('userId');
 const productQuantities = reactive<{ [id : string] : number}>({});
@@ -102,7 +124,51 @@ onMounted(async () => {
 });
 
 
+const searchProducts = async () => {
+  loading.value = true;
+
+  const query = {
+    query: {
+      bool: {
+        must: [
+          ...(fromDate.value || toDate.value
+            ? [
+                {
+                  range: {
+                    createdAt: {
+                      ...(fromDate.value && { gte: fromDate.value }),
+                      ...(toDate.value && { lte: toDate.value }),
+                    },
+                  },
+                },
+              ]
+            : []),
+            ...(selectedProducts.value && selectedProducts.value.length>0
+            ?[
+              {
+                terms:
+                {
+                  product_name : selectedProducts.value,
+                },
+              },
+            ]
+            : []),
+        ],
+
+      },
+    },
+  };
+
+  // Call your service
+  const response = await productService.searchProducts(query);
+  console.log(response?.data);
+  products.value = response?.data?.hits?.hits || [];
+  loading.value = false;
+}
 </script>
+
+
+
 
 <style scoped>
 .products {

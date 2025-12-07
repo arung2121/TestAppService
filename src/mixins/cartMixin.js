@@ -1,12 +1,15 @@
 import axios  from "axios";
 
-const API_URL = 'https://localhost:7055';
+const api = axios.create({
+  baseURL: 'https://localhost:7055'
+});
 
 export const cartMixin =
 {
         mapProductToCartItem(product, quantity = 1) {
         return {
-        ProductId: product.id,       // map id → ProductId
+        productId: product.id,       // map id → ProductId
+        id: product.id,
         name: product.name,
         description: product.description,
         price: product.price,
@@ -18,7 +21,7 @@ export const cartMixin =
         {
             const cartItem = this.mapProductToCartItem(product, 1);
             try{
-                const response = await axios.post(`${API_URL}/api/cart/${userId}/add`, cartItem);
+                const response = await api.post(`/api/cart/${userId}/add`, cartItem);
                 console.log('cart updated', response.data);
                 alert(`${product.name} added to cart`);
             }
@@ -32,7 +35,7 @@ export const cartMixin =
         {
             
              try{
-                const response = await axios.delete(`${API_URL}api/cart/${userId}/remove/${productId}`);
+                const response = await api.delete(`/api/cart/${userId}/remove/${productId}`);
                 console.log('cart updated', response.data);
             }
             catch(error)
@@ -44,7 +47,7 @@ export const cartMixin =
         async getCartItem(userId)
         {
             try {
-                const response = await axios.get(`${API_URL}/api/cart/${userId}`);
+                const response = await api.get(`/api/cart/${userId}`);
                 return response.data; 
             } 
             catch (error) {
